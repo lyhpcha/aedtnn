@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html>
+    <head>	
+        <meta charset="utf-8" />
+		<meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=medium-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.4.5.min.css" />
+        <title>台南AED放置地點</title>
+    </head> 	
+    <body>
+	    <section data-role="page" id="pg1">
+		    <section data-role="header">
+			    <a id="a_exit" href="#" class="ui-btn ui-shadow ui-icon-power ui-btn-icon-left">離開</a>
+		        <h1>台南AED放置地點</h1>
+	        </section><!-- header -->
+
+	        <section role="main" class="ui-content" id="main01">
+			    <!-- 讓Div及元素置中 -->
+			    <div id="loading" style="display:none;text-align: center;margin: 0 auto"><img src="css/images/ajax-loader.gif"></img></div>
+	        </section><!-- content -->
+
+	        <section data-role="footer" >
+		        <h4>資料來源：臺南市政府資料開放平台</h4>
+	        </section><!-- footer -->
+		</section> <!-- page pg1 -->
+		
+			
+		<section data-role="page" id="pg2">
+		    <section data-role="header">
+			    <a href="#pg1" class="ui-btn ui-shadow ui-icon-back ui-btn-icon-left">返回</a>
+		        <h1>台南AED放置地點</h1>
+	        </section><!-- header -->
+
+	        <section role="main" class="ui-content" id="main02">
+			   <p><a href="#pg3" class="ui-btn ui-shadow">如何前往</a></p>
+			   <p id="pg2_p1"></p>
+			   <p id="pg2_p2"></p>
+			   <p id="pg2_p3"></p>
+			   <p id="pg2_p4"></p>
+			   <img id="map_img"></img>
+	        </section><!-- content -->
+
+	        <section data-role="footer" >
+		        <h4>資料來源：臺南市政府資料開放平台</h4>
+	        </section><!-- footer -->
+		</section> <!-- page pg2 -->
+		
+		<section data-role="page" id="pg3" >
+		    <section data-role="header">
+			    <a href="#pg1" class="ui-btn ui-shadow ui-icon-back ui-btn-icon-left">返回</a>
+		        <h1>台南AED放置地點</h1>
+	        </section><!-- header -->
+	        <section role="main" class="ui-content" >
+                <div class="ui-bar-c ui-corner-all ui-shadow" style="padding:1em;">
+					<div id="map_canvas" style="height:400px;"></div>
+				</div>		
+	        </section><!-- content -->	       
+		</section> <!-- pg3 -->
+				
+	</body>
+		
+</html>
+
+<script type="text/javascript" src="cordova.js"></script>
+<script type="text/javascript" src="jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="jquery.mobile-1.4.5.min.js"></script>
+<!-- Google Javascript API需要Key才能使用，Key的取得在Google Developer Console -->
+<script type="text/javascript"
+      src="http://maps.googleapis.com/maps/api/js?key=your_key&sensor=true">
+</script>
+
+<script>
+    //座標全域變數，預設位置為台南市政府
+    var aedLAT = '22.992479' ;
+	var aedLNG = '120.185091';
+	var nowLAT = '22.992479' ;
+	var nowLNG = '120.185091' ;
+
+     // Wait for device API libraries to load
+    document.addEventListener("deviceready", onDeviceReady, false);
+
+    // device APIs are available
+    function onDeviceReady() {
+        //結束程式，需要cordova.js
+		$("#a_exit").on("tap",function(){
+            navigator.app.exitApp();
+		});
+    }
+
+    $( document ).ready(function() {
+         $(document).ajaxStart(function () {
+            $("#loading").show();
+        });
+
+        $(document).ajaxStop(function () {
+            $("#loading").hide();
+        });
+	
+	    var data = {
+            resource_id: 'a035f435-81df-459b-92a7-209c30ed61a3', //The resource id
+            limit: 500,  //抓取筆數
+            q: ''  //查詢條件，空白表示全部取出
+        };
+    
+        $.ajax({
+            url: 'http://data.tainan.gov.tw/api/action/datastore_search',
+            data: data,
+            dataType: 'jsonp',
+			timeout : 30000,  //毫秒，1s = 1000 ms
+            success: function(data) {				
+				//Collapsible
+				for (i=0; i < data.result.total; i++) {
+				    // data-lat等data開頭是HTML5的自訂Tag，可以像標準的Tag一樣使用
+				    var htmlcode= '<section data-role="collapsible" data-inset="false" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">'
+				                + '<h3>' + data.result.records[i].場所名稱 + "：" + data.result.records[i].AED放置地點 + '</h3>'
+					            + '<li><a href="#pg2" data-lat="' + data.result.records[i].場所LAT + '"'
+								                + 'data-lng="' + data.result.records[i].場所LNG + '"' 
+												+ 'data-bname="' + data.result.records[i].場所名稱 + '"'
+												+ 'data-bplace="' + data.result.records[i].AED放置地點 + '"'
+												+ 'data-baddress="' + data.result.records[i].場所地址 + '"'
+												+ 'data-bphone="' + data.result.records[i].連絡電話 + '"'
+												+ '>地圖</a></li>'		
+					            + '<li>地址：' + data.result.records[i].場所地址 + '</li>'
+								+ '<li>電話：' + data.result.records[i].連絡電話 + '</li>'
+				                + '</section>' ;
+				    $("#main01").append(htmlcode);
+					//重新渲染（刷新），否則jquery mobile的CSS無法正確顯示
+				    $("#main01").children().collapsible() ;	
+				}
+            },
+			erroe: function(XMLHttpRequest, textStatus, errorThrown) {
+			    //alert(err);
+				if(textStatus == 'timeout'){
+                    //超時
+					alert("無法取得資料，請確定是否開啟網路或等待資料已逾30秒。")
+				} else {
+                    alert(XMLHttpRequest.status + ', ' + XMLHttpRequest.readyState + ', ' + textStatus);
+			    }
+			},
+			complete : function(XMLHttpRequest,status){
+                //請求完成後最終執行参數
+                if(status == 'timeout'){
+                    //超時
+					alert("無法取得資料，請確定是否開啟網路或等待資料已逾30秒。");
+                }
+			}
+        }); //$.ajax	
+
+        //取得座標位置並製圖於pg2
+        $('#pg1').on('tap','a',function() {
+			//google map String
+			http_map = "http://maps.googleapis.com/maps/api/staticmap?markers=color:red|size:big|" 
+			          + $(this).attr("data-lat") + "," + $(this).attr("data-lng") 
+					  + "&zoom=16&size=" + ($(window).width()-30) + "x" + ($(window).height()-50) + "&sensor=false&scale=1";
+						
+			// google map 
+			$("#map_img").attr("src",http_map);
+			
+			//其他資訊
+			$("#pg2_p1").text("名稱：" + $(this).attr("data-bname"));
+			$("#pg2_p2").text("位置：" + $(this).attr("data-bplace"));
+			$("#pg2_p3").text("地址：" + $(this).attr("data-baddress"));
+			$("#pg2_p4").text("電話：" + $(this).attr("data-bphone"));
+			
+			if ($(this).attr("data-lat") != null || $(this).attr("data-lng") != null) {
+			    aedLAT = $(this).attr("data-lat");
+			    aedLNG = $(this).attr("data-lng");
+			}
+			
+        });		
+		
+		//需要使用pageshow，讓jquery mobile切換頁面時重新執行及刷新
+		$("#pg3" ).on( "pageshow", function() {
+			//GPS接收成功
+			var onSuccess = function(position) {               
+				    nowLAT = position.coords.latitude; //座標LAT
+					nowLNG = position.coords.longitude; //座標LNG
+                    };
+			//GPS接收失敗
+            var onError = function(error) {
+                    //alert('code: '    + error.code    + '\n' +
+                          //'message: ' + error.message + '\n');
+					alert("無法取得GPS定位，請檢查是否已開啟GPS");
+                }
+			//執行GPS接收, 外掛程式eolocation
+            navigator.geolocation.getCurrentPosition(onSuccess, onError);
+				
+				//google map繪製路徑
+				var B = new google.maps.LatLng(aedLAT,aedLNG ) ;  //目的地
+		        var A = new google.maps.LatLng(nowLAT, nowLNG) ;   //目前位置
+                var mapOptions = {
+                        center: A,
+                        zoom: 16,  //地圖縮放率
+                        mapTypeId: google.maps.MapTypeId.ROADMAP
+                    };
+		
+                var map = new google.maps.Map(document.getElementById("map_canvas"),
+                        mapOptions);
+		
+                //地圖標記		
+		        var marker = new google.maps.Marker({
+                        position: A,
+                        map: map,
+                        title:"Here" });
+			
+		        //Google Map 路徑
+		        var directionsDisplay;
+                var directionsService = new google.maps.DirectionsService();
+		        directionsDisplay = new google.maps.DirectionsRenderer();
+		        directionsDisplay.setMap(map);
+		        var request = {
+                        origin:A,  //起點位置
+                        destination:B,  //終點位置
+                        travelMode: google.maps.TravelMode.DRIVING,  //運輸選項，預設為汽車
+			            optimizeWaypoints:true
+                    };
+					
+                directionsService.route(request, function(result, status) {
+                    if (status == google.maps.DirectionsStatus.OK) {
+                        directionsDisplay.setDirections(result);
+                    } else {
+					    alert("無法載入地圖，請確定是否開啟網路。");
+					}
+                });							
+        }); // pg3		
+	});  // $( document ).ready
+	
+</script>
+
+
