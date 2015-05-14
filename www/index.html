@@ -69,7 +69,7 @@
 <script type="text/javascript" src="jquery.mobile-1.4.5.min.js"></script>
 <!-- Google Javascript API需要Key才能使用，Key的取得在Google Developer Console -->
 <script type="text/javascript"
-      src="http://maps.googleapis.com/maps/api/js?key=your_key&sensor=true">
+      src="http://maps.googleapis.com/maps/api/js?key=[YOUR_KEY]&sensor=true">
 </script>
 
 <script>
@@ -88,6 +88,7 @@
 		$("#a_exit").on("tap",function(){
             navigator.app.exitApp();
 		});
+	//};  // Test onDeviceReady
     
 
         $( document ).ready(function() {
@@ -104,7 +105,7 @@
                 limit: 500,  //抓取筆數
                 q: ''  //查詢條件，空白表示全部取出
             };
-    
+			    
             $.ajax({
                 url: 'http://data.tainan.gov.tw/api/action/datastore_search',
                 data: data,
